@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaccine Requirements World Map 2025</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f8f7f4; color: #2c2c2a; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+  h1 { font-size: 1.25rem; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 0.8rem; color: #888780; margin-bottom: 1.5rem; }
+  #map-container { width: 100%; max-width: 960px; position: relative; background: #fff; border-radius: 12px; border: 0.5px solid #d3d1c7; padding: 1.5rem; }
+  #tooltip { position: absolute; pointer-events: none; background: #fff; border: 0.5px solid #b4b2a9; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #2c2c2a; display: none; z-index: 10; max-width: 220px; line-height: 1.6; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  #tooltip strong { font-weight: 500; display: block; margin-bottom: 2px; }
+  .legend { display: flex; align-items: center; gap: 6px; margin-top: 1rem; font-size: 12px; color: #888780; flex-wrap: wrap; }
+  .legend-swatch { width: 20px; height: 13px; border-radius: 3px; display: inline-block; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .stats { display: flex; gap: 1rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .stat { background: #f1efe8; border-radius: 8px; padding: 0.75rem 1rem; flex: 1; min-width: 120px; }
+  .stat-num { font-size: 1.5rem; font-weight: 500; }
+  .stat-label { font-size: 11px; color: #888780; margin-top: 2px; }
+  path { transition: opacity 0.15s; }
+  path:hover { opacity: 0.8; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Outreach Vaccination Requirements 2025</h1>
+<p class="subtitle">Hover over a country to see which vaccines are recommended</p>
+<div id="map-container">
+  <div id="tooltip"></div>
+  <div id="map"></div>
+  <div class="legend">
+    <span>No requirements</span>
+    <span class="legend-swatch" style="background:#D3D1C7;"></span>
+    <div class="legend-item"><span class="legend-swatch" style="background:#9FE1CB;"></span><span>1 vaccine</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#5DCAA5;"></span><span>2 vaccines</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#1D9E75;"></span><span>3 vaccines</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#EF9F27;"></span><span>4 vaccines</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#D85A30;"></span><span>5+ vaccines</span></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-num">110</div><div class="stat-label">Countries tracked</div></div>
+    <div class="stat"><div class="stat-num">60</div><div class="stat-label">Countries with requirements</div></div>
+    <div class="stat"><div class="stat-num">8</div><div class="stat-label">Vaccine types covered</div></div>
+    <div class="stat"><div class="stat-num">1</div><div class="stat-label">Country with 5+ (Kenya)</div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const vaccineData = {
+  'Angola':3,'Argentina':1,'Bangladesh':2,'Brazil':3,'Burundi':4,'Cambodia':1,
+  'China':1,'Colombia':3,'Congo':4,'Costa Rica':1,'Cyprus':2,'Djibouti':1,
+  'Dominican Republic':2,'Ecuador':2,'Egypt':4,'Eswatini':1,'Ethiopia':4,
+  'Gambia':4,'Ghana':4,'Greece':2,'Guinea-Bissau':3,'Haiti':1,'India':2,
+  'Indonesia':1,'Israel':1,'Jordan':2,'Kenya':5,'Lebanon':2,'Madagascar':3,
+  'Malaysia':3,'Malta':2,'Mexico':2,'Mozambique':2,'Myanmar':1,'Namibia':1,
+  'Nepal':1,'Nicaragua':1,'Nigeria':4,'Panama':2,'Pakistan':3,'Papua New Guinea':1,
+  'Paraguay':1,'Peru':2,'Philippines':2,'Rwanda':2,'Saudi Arabia':1,'Senegal':4,
+  'Solomon Islands':1,'South Africa':1,'South Sudan':3,'Swaziland':1,'Syria':1,
+  'Tanzania':3,'Thailand':2,'Turkey':2,'Uganda':4,'Vanuatu':1,'Vietnam':1,'Zimbabwe':2
+};
+
+const vaccineNames = {
+  'Angola':['Yellow Fever','Polio Booster','Meningitis'],
+  'Argentina':['Yellow Fever'],
+  'Bangladesh':['Malaria Prophylaxis','Chikungunya'],
+  'Brazil':['Typhoid','Malaria Prophylaxis','Yellow Fever'],
+  'Burundi':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Cambodia':['Malaria Prophylaxis'],
+  'China':['TDaP/MMR'],
+  'Colombia':['Typhoid','Malaria Prophylaxis','Yellow Fever'],
+  'Congo':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Costa Rica':['Malaria Prophylaxis'],
+  'Cyprus':['TDaP/MMR','Hep A'],
+  'Djibouti':['Polio Booster'],
+  'Dominican Republic':['Typhoid','Malaria Prophylaxis'],
+  'Ecuador':['Malaria Prophylaxis','Yellow Fever'],
+  'Egypt':['TDaP/MMR','Hep A','Typhoid','Polio Booster'],
+  'Eswatini':['Malaria Prophylaxis'],
+  'Ethiopia':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Gambia':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Ghana':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Greece':['TDaP/MMR','Hep A'],
+  'Guinea-Bissau':['Malaria Prophylaxis','Yellow Fever','Meningitis'],
+  'Haiti':['Malaria Prophylaxis'],
+  'India':['Typhoid','Malaria Prophylaxis'],
+  'Indonesia':['Malaria Prophylaxis'],
+  'Israel':['Polio Booster'],
+  'Jordan':['TDaP/MMR','Hep A'],
+  'Kenya':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis','Chikungunya'],
+  'Lebanon':['TDaP/MMR','Hep A'],
+  'Madagascar':['Malaria Prophylaxis','Polio Booster','Chikungunya'],
+  'Malaysia':['TDaP/MMR','Hep A','Malaria Prophylaxis'],
+  'Malta':['TDaP/MMR','Hep A'],
+  'Mexico':['Typhoid','Malaria Prophylaxis'],
+  'Mozambique':['Malaria Prophylaxis','Polio Booster'],
+  'Myanmar':['Malaria Prophylaxis'],
+  'Namibia':['Malaria Prophylaxis'],
+  'Nepal':['Malaria Prophylaxis'],
+  'Nicaragua':['Malaria Prophylaxis'],
+  'Nigeria':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Panama':['Malaria Prophylaxis','Yellow Fever'],
+  'Pakistan':['Typhoid','Malaria Prophylaxis','Polio Booster'],
+  'Papua New Guinea':['Polio Booster'],
+  'Paraguay':['Yellow Fever'],
+  'Peru':['Malaria Prophylaxis','Yellow Fever'],
+  'Philippines':['Typhoid','Malaria Prophylaxis'],
+  'Rwanda':['Malaria Prophylaxis','Meningitis'],
+  'Saudi Arabia':['Malaria Prophylaxis'],
+  'Senegal':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Solomon Islands':['Malaria Prophylaxis'],
+  'South Africa':['Malaria Prophylaxis'],
+  'South Sudan':['Malaria Prophylaxis','Yellow Fever','Meningitis'],
+  'Swaziland':['Malaria Prophylaxis'],
+  'Syria':['Typhoid'],
+  'Tanzania':['Malaria Prophylaxis','Polio Booster','Meningitis'],
+  'Thailand':['TDaP/MMR','Malaria Prophylaxis'],
+  'Turkey':['TDaP/MMR','Hep A'],
+  'Uganda':['Malaria Prophylaxis','Yellow Fever','Polio Booster','Meningitis'],
+  'Vanuatu':['Malaria Prophylaxis'],
+  'Vietnam':['Malaria Prophylaxis'],
+  'Zimbabwe':['Malaria Prophylaxis','Polio Booster']
+};
+
+const nameMap = {
+  'Dominican Rep.':'Dominican Republic','Dem. Rep. Congo':'Congo','S. Sudan':'South Sudan',
+  'eSwatini':'Eswatini','Turkey':'Turkey','Solomon Is.':'Solomon Islands',
+  'Papua New Guinea':'Papua New Guinea','Myanmar':'Myanmar','Viet Nam':'Vietnam',
+  'Türkiye':'Turkey'
+};
+
+const colors = {0:'#D3D1C7',1:'#9FE1CB',2:'#5DCAA5',3:'#1D9E75',4:'#EF9F27',5:'#D85A30'};
+
+function getCount(name) {
+  const mapped = nameMap[name] || name;
+  return vaccineData[mapped] || vaccineData[name] || 0;
+}
+function getVaccines(name) {
+  const mapped = nameMap[name] || name;
+  return vaccineNames[mapped] || vaccineNames[name] || null;
+}
+
+const tooltip = document.getElementById('tooltip');
+const mapEl = document.getElementById('map');
+const svg = d3.select('#map').append('svg').attr('viewBox','0 0 960 500').attr('width','100%');
+const proj = d3.geoNaturalEarth1().scale(155).translate([480,260]);
+const path = d3.geoPath(proj);
+
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+  const features = topojson.feature(world, world.objects.countries).features;
+  svg.selectAll('path').data(features).join('path')
+    .attr('d', path)
+    .attr('fill', d => { const c = getCount(d.properties.name); return colors[Math.min(c,5)]; })
+    .attr('stroke', 'rgba(255,255,255,0.7)')
+    .attr('stroke-width', 0.4)
+    .on('mousemove', function(event, d) {
+      const name = d.properties.name;
+      const mapped = nameMap[name] || name;
+      const count = getCount(name);
+      const vax = getVaccines(name);
+      if (count > 0 && vax) {
+        tooltip.style.display = 'block';
+        const rect = mapEl.getBoundingClientRect();
+        tooltip.style.left = (event.clientX - rect.left + 12) + 'px';
+        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+        tooltip.innerHTML = '<strong>' + mapped + '</strong>' + vax.join(' &middot; ');
+      } else {
+        tooltip.style.display = 'none';
+      }
+    })
+    .on('mouseleave', () => tooltip.style.display = 'none');
+});
+</script>
+</body>
+</html>

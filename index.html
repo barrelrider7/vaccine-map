@@ -3,11 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vaccine Map</title>
+    <title>Vaccine Requirements World Map</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
 </head>
 <body>
-    <h1>Vaccine Distribution Map</h1>
-    <p>This map shows the locations of vaccine distribution sites.</p>
-    <!-- Add your map integration here -->
+    <div id="sidebar">
+        <h2>Vaccine Requirements</h2>
+        <p>Find out the vaccine requirements for your country.</p>
+    </div>
+    <div id="map-container">
+        <svg id="world-map" width="960" height="600"></svg>
+    </div>
+    <div id="legend">
+        <p><span style="background-color:green;">✔</span> Approved</p>
+        <p><span style="background-color:yellow;">⚠</span> Warning</p>
+        <p><span style="background-color:red;">✖</span> Not Approved</p>
+    </div>
+    <div id="stats">
+        <h3>Statistics</h3>
+        <p>Total Countries: 195</p>
+        <p>Countries with Vaccine: 150</p>
+    </div>
+    <script>
+        // D3.js code for interactive visualization
+        const width = 960,
+              height = 600;
+
+        const projection = d3.geoMercator()
+            .scale(150)
+            .translate([width / 2, height / 1.5]);
+
+        const path = d3.geoPath().projection(projection);
+
+        // Load and display the World Map
+        d3.json('https://d3js.org/world-110m.v1.json').then(data => {
+            d3.select('#world-map')
+                .selectAll('path')
+                .data(topojson.feature(data, data.objects.countries).features)
+                .enter().append('path')
+                .attr('d', path)
+                .style('fill', function(d) {
+                    // Return color based on vaccine status
+                    return colorScale(d.properties.vaccineStatus);
+                });
+        });
+    </script>
 </body>
 </html>

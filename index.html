@@ -1,8 +1,62 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Vaccine Map</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaccine Requirements World Map 2025</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+        }
+        nav {
+            background-color: #333;
+            padding: 10px;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <script src="vaccine-data.json"></script>
+    <nav>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Vaccine Info</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </nav>
+    <div id="map"></div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // D3.js code for interactive map visualization
+        const svg = d3.select("#map").append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%");
+        // Load vaccine data and render map
+        const loadVaccineData = async () => {
+            const data = await d3.json("vaccine-data.json");
+            console.log("Vaccine data loaded:", data);
+            // Render the interactive map using the vaccine data
+        };
+        loadVaccineData();
+    </script>
 </body>
 </html>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outreach Vaccination Requirements 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f8f7f4; color: #2c2c2a; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.5rem 1rem; }
+  h1 { font-size: 1.2rem; font-weight: 500; margin-bottom: 0.2rem; }
+  .subtitle { font-size: 0.78rem; color: #888780; margin-bottom: 1.25rem; }
+
+  #layout { display: flex; gap: 1rem; width: 100%; max-width: 1240px; align-items: flex-start; }
+
+  /* ── SIDEBAR ── */
+  #sidebar { flex: 0 0 180px; background: #fff; border-radius: 12px; border: 0.5px solid #d3d1c7; padding: 0.9rem; font-size: 11px; position: sticky; top: 1rem; max-height: calc(100vh - 3rem); overflow-y: auto; }
+  #sidebar h2 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #5a5955; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 0.5px solid #e0ddd5; }
+  #sidebar ul { list-style: none; }
+  #sidebar ul li { padding: 3px 5px; border-radius: 5px; cursor: pointer; color: #3a3a38; transition: background 0.12s; display: flex; align-items: flex-start; gap: 5px; line-height: 1.35; }
+  #sidebar ul li:hover { background: #eef9f5; color: #1D9E75; }
+  #sidebar ul li.active { background: #d4f3e8; color: #0f7a58; font-weight: 600; }
+  #sidebar ul li .dot { width: 6px; height: 6px; border-radius: 50%; background: #4BB8A9; flex-shrink: 0; margin-top: 4px; }
+  #sidebar ul li .note { font-size: 9px; color: #aaa89f; display: block; margin-top: 1px; font-weight: 400; }
+  #sidebar .clear-btn { margin-top: 0.65rem; width: 100%; padding: 5px; background: #f1efe8; border: 0.5px solid #d3d1c7; border-radius: 6px; font-size: 10.5px; color: #888780; cursor: pointer; display: none; }
+  #sidebar .clear-btn:hover { background: #e8e5dc; }
+
+  /* ── MAP CARD ── */
+  #map-container { flex: 1; min-width: 0; position: relative; background: #fff; border-radius: 12px; border: 0.5px solid #d3d1c7; padding: 1.1rem; }
+
+  /* ── TOOLTIP ── */
+  #tooltip {
+    position: fixed; pointer-events: none;
+    background: #fff; border: 0.5px solid #c0bdb4;
+    border-radius: 10px; padding: 10px 13px;
+    font-size: 12px; color: #2c2c2a;
+    display: none; z-index: 1000; max-width: 320px;
+    line-height: 1.55; box-shadow: 0 4px 16px rgba(0,0,0,0.11);
+  }
+  #tooltip .tt-country { font-weight: 600; font-size: 13px; margin-bottom: 6px; color: #1a1a18; }
+  #tooltip .tt-badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 10px; font-weight: 600; margin-bottom: 5px; }
+  #tooltip .tt-badge.novax  { background: #d4f3e8; color: #0f7a58; }
+  #tooltip .tt-badge.low    { background: #e6f7f2; color: #1D9E75; }
+  #tooltip .tt-badge.mid    { background: #fff3d6; color: #b07000; }
+  #tooltip .tt-badge.high   { background: #ffe5d8; color: #b03000; }
+  #tooltip .tt-vax-row { margin-bottom: 4px; }
+  #tooltip .tt-vax-name { font-weight: 600; font-size: 11px; color: #3a3a38; }
+  #tooltip .tt-vax-note { font-size: 11px; color: #5a5955; display: block; margin-top: 1px; }
+  #tooltip .tt-note-block { margin-top: 6px; padding-top: 6px; border-top: 0.5px solid #e8e5dc; font-size: 10.5px; color: #777570; }
+  #tooltip .tt-link { color: #1D9E75; font-size: 10px; display: block; margin-top: 3px; word-break: break-all; }
+  #tooltip .tt-reviewed { font-size: 9.5px; color: #aaa89f; margin-top: 6px; display: block; }
+
+  /* ── LEGEND BAR ── */
+  .legend-bar { display: flex; align-items: center; gap: 5px; margin-top: 0.9rem; font-size: 11px; color: #888780; flex-wrap: wrap; }
+  .ls { width: 18px; height: 12px; border-radius: 3px; display: inline-block; }
+  .li { display: flex; align-items: center; gap: 4px; }
+
+  /* ── STATS ── */
+  .stats { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+  .stat { background: #f1efe8; border-radius: 8px; padding: 0.6rem 0.9rem; flex: 1; min-width: 90px; }
+  .stat-num { font-size: 1.3rem; font-weight: 500; }
+  .stat-label { font-size: 10px; color: #888780; margin-top: 2px; }
+
+  path { transition: opacity 0.12s; }
+  path:hover { opacity: 0.72; cursor: pointer; }
+  path.highlighted { stroke: #0a6647 !important; stroke-width: 1.8 !important; opacity: 1 !important; }
+  path.dimmed { opacity: 0.18; }
+
+  @media (max-width: 700px) {
+    #layout { flex-direction: column; }
+    #sidebar { flex: none; width: 100%; position: static; max-height: 260px; }
+  }
+</style>
+</head>
+<body>
+<h1>Outreach Vaccination Requirements 2026</h1>
+<p class="subtitle">Hover over any country for full details &nbsp;·&nbsp; Click a no-vax location in the sidebar to highlight it on the map</p>
+
+<div id="layout">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <h2>✓ No Vaccines Required</h2>
+    <ul id="novax-list"></ul>
+    <button class="clear-btn" id="clear-btn" onclick="clearHighlight()">✕ Clear selection</button>
+  </div>
+
+  <!-- MAP -->
+  <div id="map-container">
+    <div id="map"></div>
+    <div class="legend-bar">
+      <span>No data</span><span class="ls" style="background:#D3D1C7;"></span>
+      <div class="li"><span class="ls" style="background:#4BB8A9;"></span><span>No vaccines</span></div>
+      <div class="li"><span class="ls" style="background:#9FE1CB;"></span><span>1 vaccine type</span></div>
+      <div class="li"><span class="ls" style="background:#5DCAA5;"></span><span>2 types</span></div>
+      <div class="li"><span class="ls" style="background:#1D9E75;"></span><span>3 types</span></div>
+      <div class="li"><span class="ls" style="background:#EF9F27;"></span><span>4 types</span></div>
+      <div class="li"><span class="ls" style="background:#D85A30;"></span><span>5+ types</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num">120+</div><div class="stat-label">Countries tracked</div></div>
+      <div class="stat"><div class="stat-num">31</div><div class="stat-label">No-vax locations</div></div>
+      <div class="stat"><div class="stat-num">11</div><div class="stat-label">Vaccine types</div></div>
+      <div class="stat"><div class="stat-num">Updated</div><div class="stat-label">Jan–May 2026</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Fixed tooltip -->
+<div id="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+// ── VACCINE DATA (2026) ──────────────────────────────────────────────────────
+// Each entry: { vax: {VaccineName: 'note or true'}, notes: 'extra info', reviewed: 'date', alert: 'urgent note' }
+const countryData = {
+  'Angola': {
+    vax: {
+      'Yellow Fever': 'Required for all of country',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Argentina': {
+    vax: {
+      'Yellow Fever': 'Required for travelers ≥9 months going to Corrientes and Misiones Provinces. Generally not required for Formosa and designated areas of Chaco, Jujuy, Salta. Not required for other provinces.'
+    }
+  },
+  'Australia': {
+    notes: 'Japanese encephalitis mainly a concern in Murray River and Outer Torres Strait Islands.'
+  },
+  'Bangladesh': {
+    vax: {
+      'Malaria Prophylaxis': 'Necessary in: Chittagong Hill Tract districts, Cox\'s Bazar, Mymensingh, Netrakona, Sherpur, Kurigram, and Sylhet Division districts',
+      'Chikungunya': 'Increased cases in Dhaka as of Aug 2025'
+    },
+    alert: 'See travax.com bulletin for latest Chikungunya updates'
+  },
+  'Belgium': {
+    vax: { 'TBE': 'Not required but may be recommended — see TBE map' }
+  },
+  'Botswana': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for: Bobirwa, Boteti, Chobe (incl. National Park), Ghanzi, Mahalapye, Ngamiland, North-East, Okavango, Serowe/Palapye, Tutume. Only insect precautions for Kgalagadi North, Kgatleng, Kweneng, Southern. No malaria in Gaborone.'
+    },
+    reviewed: '2026-04-01'
+  },
+  'Brazil': {
+    vax: {
+      'Typhoid': 'Needed if doing slum ministry or travelling outside major cities',
+      'Malaria Prophylaxis': 'Required outside major cities. Risk areas: Acre, Amapá, Amazonas, Rondônia, Roraima (all areas); Maranhão, Mato Grosso, Pará (rare in capitals); rural Espírito Santo, Goiás, Minas Gerais, MS, Piauí, RJ, SP, Tocantins. No malaria in Brasília, Rio, São Paulo.',
+      'Yellow Fever': 'Required for travelers ≥9mo in: Acre, Amapá, Amazonas, DF (incl. Brasília), ES, Goiás, Maranhão, MT, MS, MG, Pará, Paraná, Piauí, RJ (incl. city), RS, Rondônia, Roraima, SC, SP (incl. city), Tocantins, and parts of Bahia, Iguaçu Falls. Not required outside these areas (incl. Fortaleza, Recife).'
+    },
+    alert: 'IF OBTAINING YELLOW FEVER VAX IN-COUNTRY ON ARRIVAL: must delay entering Yellow Fever area for 2 weeks after vaccination.',
+    reviewed: '2026-04-01'
+  },
+  'Burundi': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all of country — see Africa YF map',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    },
+    reviewed: '2026-04-01'
+  },
+  'Cambodia': {
+    vax: {
+      'Malaria Prophylaxis': 'Present throughout country. None/negligible in Phnom Penh, Siem Reap, and Angkor Wat. Required for all visitors outside major cities — check itinerary carefully, consult YWAM base leaders about local risk.'
+    },
+    notes: 'Typhoid especially important / needed if doing slum ministry or travelling outside major cities'
+  },
+  'China': {
+    vax: {
+      'Hep A': 'Highly recommended if doing rural ministry',
+      'Typhoid': 'Highly recommended if doing rural ministry',
+      'TBE': 'Not required but may be recommended — see TBE map'
+    },
+    notes: 'Contact Campus Health directly with specific location plans — too diverse to list all variations here. Varicella required for anyone pregnant or planning to become pregnant during outreach.',
+    reviewed: '2026-05-01'
+  },
+  'Colombia': {
+    vax: {
+      'Typhoid': 'Needed if doing slum or village ministry on recommendation of local leadership',
+      'Malaria Prophylaxis': 'Needed if travelling to areas <1,700 m (5,577 ft) elevation. Not needed in Bogotá, Cartagena, Medellín. See Colombia Malaria Map.',
+      'Yellow Fever': 'Required for areas <2,300 m (7,546 ft). Not required in Barranquilla, Cali, Cartagena, Medellín, San Andrès y Providencia, or Bogotá. See Colombia YF Map. Needed for Leticia.'
+    },
+    reviewed: '2026-01-01'
+  },
+  'Congo': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all of country — see Africa YF map',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Costa Rica': {
+    vax: {
+      'Malaria Prophylaxis': 'If visiting Districts of Cutris and Pocosol in San Carlos Canton, Alajuela Province'
+    }
+  },
+  'Cyprus': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees',
+      'Hep A': 'Needed if working with refugees'
+    }
+  },
+  'Djibouti': {
+    vax: {
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated'
+    }
+  },
+  'Dominican Republic': {
+    vax: {
+      'Typhoid': 'If visiting provinces near Haiti border, Santo Domingo, or La Altagracia (incl. resort areas)',
+      'Malaria Prophylaxis': 'If visiting provinces near Haiti border, Santo Domingo, or La Altagracia (incl. resort areas)'
+    }
+  },
+  'Ecuador': {
+    vax: {
+      'Malaria Prophylaxis': 'If visiting provinces east of the Andes — see Ecuador Malaria Map',
+      'Yellow Fever': 'If visiting Morona-Santiago, Napo, Orellana, Pastaza, Sucumbios, Zamora-Chinchipe — see Ecuador YF Map'
+    }
+  },
+  'Egypt': {
+    vax: {
+      'TDaP/MMR': 'Needed if working in refugee camps',
+      'Hep A': 'Needed if working in refugee camps',
+      'Typhoid': 'Needed if working in refugee camps',
+      'Polio Booster': 'Only if working in refugee camps'
+    },
+    reviewed: '2026-04-01'
+  },
+  'Eswatini': {
+    vax: {
+      'Malaria Prophylaxis': 'For eastern areas bordering Mozambique and South Africa: entire Lubombo region and eastern halves of Hhohho, Manzini, and Shiselweni Regions (see map)'
+    }
+  },
+  'Ethiopia': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country. Malaria in all areas <2,500 m (<8,200 ft) elevation.',
+      'Yellow Fever': 'Required for most of country — see Ethiopia YF map',
+      'Polio Booster': 'See CDC polio risk map',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    },
+    reviewed: '2026-04-01'
+  },
+  'Finland': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' } },
+  'France': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' }, reviewed: '2026-01-01' },
+  'Gambia': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all areas',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Germany': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' } },
+  'Ghana': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all areas',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Greece': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees',
+      'Hep A': 'Needed if working with refugees'
+    }
+  },
+  'Guinea': {
+    vax: {
+      'Polio Booster': 'See CDC polio risk map',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    },
+    alert: '⚠ July 2025: Confirmed/suspect diphtheria cases in Kankan region. Diphtheria vaccination essential.',
+    reviewed: '2026-04-01'
+  },
+  'Guinea-Bissau': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all areas',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    },
+    reviewed: '2026-04-01'
+  },
+  'Haiti': {
+    vax: { 'Malaria Prophylaxis': 'Required for entire country' }
+  },
+  'India': {
+    vax: {
+      'Typhoid': 'Needed if doing slum or village ministry',
+      'Malaria Prophylaxis': 'If travelling in village areas with known malaria transmission — see India Malaria Map'
+    },
+    reviewed: '2026-01-01'
+  },
+  'Indonesia': {
+    vax: {
+      'Malaria Prophylaxis': 'Required in: all eastern Indonesia (Maluku, North Maluku, East Nusa Tenggara, Papua, West Papua), including Labuan Bajo & Komodo Islands; rural Kalimantan (Borneo), West Nusa Tenggara (Lombok), Sulawesi, Sumatra; low risk in rural Java (Pangandaran, Sukabumi, Ujung Kulong). No malaria in Jakarta, Ubud, Bali/Java resorts, Gili Islands, Thousand Islands.'
+    }
+  },
+  'Israel': {
+    vax: {
+      'Polio Booster': 'Single lifetime booster (IPV) recommended for adults; full series for unvaccinated'
+    },
+    alert: 'See WHO disease outbreak notice — 2025-DON578'
+  },
+  'Italy': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' } },
+  'Japan': {
+    vax: { 'TBE': 'Not required but may be recommended — see TBE map' },
+    notes: 'Check with Campus Health if going to Hokkaido prefecture.',
+    alert: '⚠ Significant increase in Measles cases in Japan (2026) — MMR highly recommended.',
+    reviewed: '2026-04-01'
+  },
+  'Jordan': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees',
+      'Hep A': 'Needed if working with refugees'
+    },
+    reviewed: '2026-04-01'
+  },
+  'Kazakhstan': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' } },
+  'Kenya': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for almost all areas <2,500 m (<8,200 ft) incl. game parks. Only rare cases in central Nairobi — insect precautions only there. See Kenya malaria map.',
+      'Yellow Fever': 'Generally required for western Kenya. Not required if limited to: Nairobi, former North Eastern Province (Mandera, Wajir, Garissa), or former Coast Province (excl. Taita-Taveta). See Kenya YF map.',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas',
+      'Chikungunya': 'Increased cases as of Aug 2025'
+    },
+    notes: 'Malaria in all areas <2,500 m (<8,200 ft) elevation',
+    reviewed: '2026-04-01'
+  },
+  'Kyrgyzstan': {
+    vax: { 'TBE': 'Not required but may be recommended. Risk in forested areas Mar–Nov.' },
+    notes: 'Check CDC warnings for measles outbreak status',
+    reviewed: '2026-04-01'
+  },
+  'Lebanon': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees',
+      'Hep A': 'Needed if working with refugees'
+    }
+  },
+  'Madagascar': {
+    vax: {
+      'Malaria Prophylaxis': 'For areas except Antananarivo — recommend Atovaquone-proguanil, doxycycline, or mefloquine',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated',
+      'Chikungunya': 'Increased cases as of Aug 2025'
+    }
+  },
+  'Malawi': {
+    vax: { 'Malaria Prophylaxis': 'Required for entire country' },
+    reviewed: '2026-04-01'
+  },
+  'Malaysia': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees or in villages',
+      'Hep A': 'Needed if working with refugees or in villages',
+      'Typhoid': 'IN REVIEW — contact Campus Health'
+    },
+    reviewed: '2026-04-01'
+  },
+  'Malta': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees',
+      'Hep A': 'Needed if working with refugees',
+      'Malaria Prophylaxis': 'If visiting/staying in rural or jungle area: recommend Atovaquone-proguanil, doxycycline, or mefloquine'
+    }
+  },
+  'Mexico': {
+    vax: {
+      'Typhoid': 'Higher risk in southern states and rural areas',
+      'Malaria Prophylaxis': 'If visiting Chiapas and southern Chihuahua — see Mexico Malaria Map'
+    }
+  },
+  'Mongolia': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' }, reviewed: '2026-04-01' },
+  'Morocco': { reviewed: '2026-01-01' },
+  'Mozambique': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated'
+    },
+    reviewed: '2026-01-01'
+  },
+  'Myanmar': {
+    vax: {
+      'Malaria Prophylaxis': 'Present <1,000 m (3,281 ft) incl. Bagan. Required chemoprophylaxis: Bago, Kachin, Kayah, Kayin, Shan, Tanintharyi <1,000 m — Atovaquone-proguanil, doxycycline, or tafenoquine. Other areas <1,000 m — add mefloquine option.'
+    }
+  },
+  'Namibia': {
+    vax: {
+      'Malaria Prophylaxis': 'If visiting: Kavango (E/W), Kunene, Ohangwena, Omusati, Oshana, Oshikoto, Otjozondjupa, Zambezi. No malaria in Windhoek. See Namibia Malaria Map.'
+    }
+  },
+  'Nepal': {
+    vax: { 'Malaria Prophylaxis': 'If travelling in southern terai (altitude <1,700 m) — see India Malaria Map' },
+    reviewed: '2026-01-01'
+  },
+  'Nicaragua': {
+    vax: {
+      'Malaria Prophylaxis': 'Malaria in: RAAN and RAAS. Rare in Boaco, Chinandega, Estelí, Jinotega, León, Matagalpa, Nueva Segovia. No malaria in Managua.'
+    }
+  },
+  'Nigeria': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all areas',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Norway': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' }, reviewed: '2026-01-01' },
+  'Pakistan': {
+    vax: {
+      'Typhoid': 'Needed if doing slum or village ministry',
+      'Malaria Prophylaxis': 'If travelling in southern provinces of Sindh or Punjab — see India Malaria Map',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated'
+    },
+    alert: '⚠ Pakistan experiencing outbreak of extensively drug-resistant typhoid fever (5/2026). Take extra precautions.',
+    reviewed: '2026-01-01'
+  },
+  'Panama': {
+    vax: {
+      'Malaria Prophylaxis': 'Provinces of Darién, Emberá, eastern Panamá, Kuna Yala, Bocas del Toro, Chiriquí, Colón, Veraguas, Ngäbe-Buglé',
+      'Yellow Fever': 'Required for travelers ≥9 months going to mainland east of the canal: all of Darién (incl. Emberá) and Kuna Yala, plus parts of Colón and Panamá provinces east of canal. Not required west of canal, city of Panama, canal area, Balboa/Pearl/San Blas Islands.'
+    }
+  },
+  'Papua New Guinea': {
+    vax: { 'Polio Booster': 'See CDC polio risk map' },
+    reviewed: '2026-04-01'
+  },
+  'Paraguay': {
+    vax: { 'Yellow Fever': 'If visiting any part of country outside Asuncion (the capital)' },
+    reviewed: '2026-01-01'
+  },
+  'Peru': {
+    vax: {
+      'Malaria Prophylaxis': 'All areas <2,500 m (~8,200 ft) incl. Iquitos, Puerto Maldonado, remote eastern areas of La Libertad and Lambayeque. No malaria in: Lima Province, Arequipa, Ica, Moquegua, Nazca, Puno, Tacna, highland tourist areas (Cusco, Machu Picchu, Lake Titicaca), or the Pacific Coast.',
+      'Yellow Fever': 'Required ≥9mo for: Amazonas, Loreto, Madre de Dios, San Martín, Ucayali, Puno, Cusco, Junín, Pasco, Huánuco (all <2,300 m), and designated areas of several other regions. Not required >2,300 m, most western Andes areas, Cusco city, Lima, Machu Picchu, Inca Trail.'
+    }
+  },
+  'Philippines': {
+    vax: {
+      'Typhoid': 'Needed if doing slum or village ministry on recommendation of local leadership',
+      'Malaria Prophylaxis': 'Required for Palawan and Mindanao Islands. No malaria in metropolitan Manila or other urban areas.'
+    },
+    reviewed: '2026-01-01'
+  },
+  'Poland': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' } },
+  'Rwanda': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Saudi Arabia': {
+    vax: {
+      'Malaria Prophylaxis': 'If visiting lower elevations of Asir and all of Jizan provinces (by Yemen border). Very low risk in Abha, Asir (high elevation).'
+    }
+  },
+  'Senegal': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all of country — see Africa YF map',
+      'Polio Booster': 'MenACWY-CRM for travel Dec–Jun in high-risk areas',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Solomon Islands': {
+    vax: { 'Malaria Prophylaxis': 'Required for entire country' },
+    reviewed: '2026-04-01'
+  },
+  'South Africa': {
+    vax: {
+      'Malaria Prophylaxis': 'Rural/bush areas: along Mozambique/Zimbabwe border — Mpumalanga Ehlanzeni District, Kruger National Park, KwaZulu-Natal uMkhanyakude District, Limpopo Mopani and Vhembe Districts. Only insect precautions for KZN King Cetshwayo/Zululand, Limpopo Capricorn/Sekhukhune/Waterberg. Urban areas: NO malaria risk in major cities.'
+    },
+    notes: 'Two categories: Rural townships/northern bush (malaria risk applies) and Urban (no malaria risk, no vaccines required).',
+    reviewed: '2026-04-01'
+  },
+  'South Korea': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' } },
+  'South Sudan': {
+    vax: {
+      'Malaria Prophylaxis': 'All areas — recommend Atovaquone-proguanil, doxycycline, or mefloquine',
+      'Yellow Fever': 'Required for arrival/all areas',
+      'Polio Booster': 'See CDC polio risk map',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Spain': {},
+  'Sudan': {
+    vax: {
+      'Typhoid': 'See typhoid map',
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required in all areas except Sahara Desert and Khartoum (the capital)',
+      'Polio Booster': 'See CDC polio risk map',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Swaziland': {
+    vax: {
+      'Malaria Prophylaxis': 'Eastern areas bordering Mozambique and South Africa, incl. entire Lubombo region and eastern halves of Hhohho, Manzini, Shiselweni Regions'
+    }
+  },
+  'Syria': {
+    vax: { 'Typhoid': 'Needed if doing slum or village ministry on recommendation of local leadership' }
+  },
+  'Tanzania': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country — all areas <1,800 m (5,900 ft). See Tanzania malaria map.',
+      'Polio Booster': 'See CDC polio risk map',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'Thailand': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees or in villages',
+      'Malaria Prophylaxis': 'Primarily in provinces bordering Myanmar, Cambodia, and Laos. Also in Kalasin and other rural provinces — check itinerary carefully.'
+    },
+    notes: 'Typhoid especially important / needed if doing slum ministry or travelling outside major cities'
+  },
+  'Turkey': {
+    vax: {
+      'TDaP/MMR': 'Needed if working with refugees or in villages',
+      'Hep A': 'Needed if working with refugees or in villages'
+    },
+    notes: 'Check travel advisory level with US Dept. of State'
+  },
+  'Uganda': {
+    vax: {
+      'Malaria Prophylaxis': 'Required for entire country',
+      'Yellow Fever': 'Required for all areas',
+      'Polio Booster': 'Single lifetime booster (IPV) required for adults; full series for unvaccinated',
+      'Meningitis': 'MenACWY-CRM for travel Dec–Jun in high-risk areas'
+    }
+  },
+  'United Kingdom': { vax: { 'TBE': 'Not required but may be recommended — see TBE map' } },
+  'Ukraine': { vax: { 'TDaP/MMR': 'NEED REVIEW — contact Campus Health', 'TBE': 'Not required but may be recommended' } },
+  'Vanuatu': {
+    vax: { 'Malaria Prophylaxis': 'Required for entire country' }
+  },
+  'Vietnam': {
+    vax: {
+      'Malaria Prophylaxis': 'Provinces: Bình Dương, Bình Phước, Đắk Lắk, Đắk Nông, Gia Lai, Khánh Hòa, Kon Tum, Lâm Đồng, Ninh Thuận, Tây Ninh, and others — check full map'
+    }
+  },
+  'Zambia': {
+    vax: { 'Malaria Prophylaxis': 'Required for entire country' }
+  },
+  'Zimbabwe': {
+    vax: { 'Malaria Prophylaxis': 'Required for entire country' }
+  },
+};
+
+// ── NO-VAX OUTREACH LOCATIONS ────────────────────────────────────────────────
+const noVaxLocations = [
+  { label: 'Albania',       mapName: 'Albania' },
+  { label: 'Armenia',       mapName: 'Armenia' },
+  { label: 'Australia',     mapName: 'Australia' },
+  { label: 'Azerbaijan',    mapName: 'Azerbaijan' },
+  { label: 'Bahrain',       mapName: 'Bahrain' },
+  { label: 'Belgium',       mapName: 'Belgium' },
+  { label: 'Canada',        mapName: 'Canada' },
+  { label: 'Chile',         mapName: 'Chile' },
+  { label: 'China',         mapName: 'China',                       note: 'Hong Kong only' },
+  { label: 'Dubai / UAE',   mapName: 'United Arab Emirates',        note: 'City of Dubai / UAE' },
+  { label: 'Finland',       mapName: 'Finland' },
+  { label: 'France',        mapName: 'France' },
+  { label: 'Georgia',       mapName: 'Georgia' },
+  { label: 'Germany',       mapName: 'Germany' },
+  { label: 'Italy',         mapName: 'Italy' },
+  { label: 'Japan',         mapName: 'Japan' },
+  { label: 'Kazakhstan',    mapName: 'Kazakhstan' },
+  { label: 'Kyrgyzstan',    mapName: 'Kyrgyzstan' },
+  { label: 'Netherlands',   mapName: 'Netherlands' },
+  { label: 'New Zealand',   mapName: 'New Zealand' },
+  { label: 'Norway',        mapName: 'Norway' },
+  { label: 'Oman',          mapName: 'Oman' },
+  { label: 'Poland',        mapName: 'Poland' },
+  { label: 'Portugal',      mapName: 'Portugal' },
+  { label: 'Singapore',     mapName: 'Singapore' },
+  { label: 'South Africa',  mapName: 'South Africa',                note: 'Major cities only' },
+  { label: 'South Korea',   mapName: 'South Korea' },
+  { label: 'Spain',         mapName: 'Spain' },
+  { label: 'Taiwan',        mapName: 'Taiwan' },
+  { label: 'UK',            mapName: 'United Kingdom' },
+  { label: 'USA',           mapName: 'United States of America' },
+];
+
+const noVaxMapNames = new Set(noVaxLocations.map(d => d.mapName));
+
+// ── TOPOJSON NAME RESOLUTION ─────────────────────────────────────────────────
+const nameMap = {
+  'Dominican Rep.':         'Dominican Republic',
+  'Dem. Rep. Congo':        'Congo',
+  'S. Sudan':               'South Sudan',
+  'eSwatini':               'Eswatini',
+  'Türkiye':                'Turkey',
+  'Solomon Is.':            'Solomon Islands',
+  'Viet Nam':               'Vietnam',
+  'S. Korea':               'South Korea',
+  'Korea':                  'South Korea',
+  'W. Sahara':              'Western Sahara',
+  'Bosnia and Herz.':       'Bosnia and Herzegovina',
+  'Central African Rep.':   'Central African Republic',
+  'Eq. Guinea':             'Equatorial Guinea',
+};
+
+const COLORS = { novax:'#4BB8A9', 0:'#D3D1C7', 1:'#9FE1CB', 2:'#5DCAA5', 3:'#1D9E75', 4:'#EF9F27', 5:'#D85A30' };
+
+function resolve(name) { return nameMap[name] || name; }
+
+function getEntry(topoName) {
+  const n = resolve(topoName);
+  return countryData[n] || countryData[topoName] || null;
+}
+
+function getVaxCount(topoName) {
+  const entry = getEntry(topoName);
+  if (!entry || !entry.vax) return 0;
+  return Object.keys(entry.vax).length;
+}
+
+function isNoVax(topoName) {
+  const n = resolve(topoName);
+  return noVaxMapNames.has(n) || noVaxMapNames.has(topoName);
+}
+
+function getNoVaxEntry(topoName) {
+  const n = resolve(topoName);
+  return noVaxLocations.find(d => d.mapName === n || d.mapName === topoName) || null;
+}
+
+function getFill(topoName) {
+  if (isNoVax(topoName)) return COLORS.novax;
+  const c = getVaxCount(topoName);
+  return COLORS[Math.min(c, 5)];
+}
+
+// ── BUILD SIDEBAR ─────────────────────────────────────────────────────────────
+const list = document.getElementById('novax-list');
+noVaxLocations.forEach(loc => {
+  const li = document.createElement('li');
+  li.dataset.mapname = loc.mapName;
+  li.innerHTML = `<span class="dot"></span><span>${loc.label}${loc.note ? `<span class="note">${loc.note}</span>` : ''}</span>`;
+  li.addEventListener('click', () => highlightCountry(loc.mapName, li));
+  list.appendChild(li);
+});
+
+// ── TOOLTIP ───────────────────────────────────────────────────────────────────
+const tooltip = document.getElementById('tooltip');
+
+function buildTooltip(topoName) {
+  const n = resolve(topoName);
+  const nvEntry = getNoVaxEntry(topoName);
+  const dataEntry = getEntry(topoName);
+  const count = getVaxCount(topoName);
+  const isNV = isNoVax(topoName);
+
+  if (!isNV && count === 0 && !dataEntry) return null;
+
+  let html = `<div class="tt-country">${nvEntry ? nvEntry.label : n}</div>`;
+
+  if (isNV) {
+    html += `<span class="tt-badge novax">✓ No vaccines required</span>`;
+    if (nvEntry && nvEntry.note) html += `<div style="font-size:10.5px;color:#777570;margin-bottom:4px;">${nvEntry.note}</div>`;
+  }
+
+  if (dataEntry) {
+    if (dataEntry.alert) {
+      html += `<div style="background:#fff3d6;color:#7a4f00;border-radius:5px;padding:5px 8px;font-size:10.5px;margin-bottom:6px;line-height:1.45;">${dataEntry.alert}</div>`;
+    }
+
+    const badgeCount = count;
+    if (!isNV && badgeCount > 0) {
+      const cls = badgeCount <= 1 ? 'low' : badgeCount <= 3 ? 'mid' : 'high';
+      html += `<span class="tt-badge ${cls}">${badgeCount} vaccine type${badgeCount > 1 ? 's' : ''} recommended</span>`;
+    }
+
+    if (dataEntry.vax) {
+      html += '<div style="margin-top:5px;">';
+      for (const [name, note] of Object.entries(dataEntry.vax)) {
+        html += `<div class="tt-vax-row"><span class="tt-vax-name">· ${name}</span>`;
+        if (note && note !== true) html += `<span class="tt-vax-note">${note}</span>`;
+        html += `</div>`;
+      }
+      html += '</div>';
+    }
+
+    if (dataEntry.notes) {
+      html += `<div class="tt-note-block">ℹ ${dataEntry.notes}</div>`;
+    }
+
+    if (dataEntry.reviewed) {
+      html += `<span class="tt-reviewed">CDC/WHO last reviewed: ${dataEntry.reviewed}</span>`;
+    }
+  }
+
+  return html;
+}
+
+// ── HIGHLIGHT LOGIC ───────────────────────────────────────────────────────────
+const svg = d3.select('#map').append('svg').attr('viewBox','0 0 960 500').attr('width','100%');
+let activeMapName = null;
+
+function clearHighlight() {
+  activeMapName = null;
+  svg.selectAll('path').classed('highlighted', false).classed('dimmed', false);
+  document.querySelectorAll('#novax-list li').forEach(el => el.classList.remove('active'));
+  document.getElementById('clear-btn').style.display = 'none';
+}
+
+function highlightCountry(mapName, liEl) {
+  if (activeMapName === mapName) { clearHighlight(); return; }
+  activeMapName = mapName;
+  svg.selectAll('path').each(function(d) {
+    const n = resolve(d.properties.name);
+    const match = (n === mapName || d.properties.name === mapName);
+    d3.select(this).classed('highlighted', match).classed('dimmed', !match);
+  });
+  document.querySelectorAll('#novax-list li').forEach(el => el.classList.remove('active'));
+  if (liEl) { liEl.classList.add('active'); liEl.scrollIntoView({ block:'nearest', behavior:'smooth' }); }
+  document.getElementById('clear-btn').style.display = 'block';
+}
+
+// ── RENDER MAP ────────────────────────────────────────────────────────────────
+const proj = d3.geoNaturalEarth1().scale(155).translate([480, 260]);
+const pathGen = d3.geoPath(proj);
+
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+  const features = topojson.feature(world, world.objects.countries).features;
+
+  svg.selectAll('path').data(features).join('path')
+    .attr('d', pathGen)
+    .attr('fill', d => getFill(d.properties.name))
+    .attr('stroke', 'rgba(255,255,255,0.7)')
+    .attr('stroke-width', 0.4)
+    .on('mousemove', function(event, d) {
+      const html = buildTooltip(d.properties.name);
+      if (html) {
+        tooltip.style.display = 'block';
+        tooltip.innerHTML = html;
+        // Position tooltip smartly
+        const tw = 330, th = 200;
+        let left = event.clientX + 14;
+        let top  = event.clientY - 10;
+        if (left + tw > window.innerWidth - 10) left = event.clientX - tw - 10;
+        if (top + th > window.innerHeight - 10) top = event.clientY - th - 10;
+        tooltip.style.left = left + 'px';
+        tooltip.style.top  = top  + 'px';
+      } else {
+        tooltip.style.display = 'none';
+      }
+    })
+    .on('click', function(event, d) {
+      if (!isNoVax(d.properties.name)) return;
+      const entry = getNoVaxEntry(d.properties.name);
+      if (!entry) return;
+      const li = document.querySelector(`#novax-list li[data-mapname="${entry.mapName}"]`);
+      highlightCountry(entry.mapName, li);
+    })
+    .on('mouseleave', () => tooltip.style.display = 'none');
+});
+</script>
+</body>
+</html>
